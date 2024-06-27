@@ -14,10 +14,11 @@ db = SQLAlchemy(metadata=metadata)
 class Customer(db.Model, SerializerMixin):
     __tablename__ = 'customers'
     
-    serialize_rules = ('-reviews.customer',)
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
+    
+    serialize_rules = ('-reviews.customer',)
     
     reviews = db.relationship('Review', back_populates='customer', cascade='all, delete-orphan')
     
@@ -31,15 +32,16 @@ class Customer(db.Model, SerializerMixin):
 class Item(db.Model, SerializerMixin):
     __tablename__ = 'items'
 
-    serialize_rules = ('-reviews.item',)
     
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     price = db.Column(db.Float)
     
+    serialize_rules = ('-reviews.item',)
+    
     reviews = db.relationship('Review', back_populates='item', cascade='all, delete-orphan')
     
-    customers = association_proxy('reviews', 'customer', creator=lambda customer_obj: Review(customer=customer_obj))
+    #customers = association_proxy('reviews', 'customer', creator=lambda customer_obj: Review(customer=customer_obj))
 
     def __repr__(self):
         return f'<Item {self.id}, {self.name}, {self.price}>'
@@ -47,12 +49,13 @@ class Item(db.Model, SerializerMixin):
 class Review(db.Model, SerializerMixin):
     __tablename__ = 'reviews'
     
-    serialize_rules = ('-customers.review, -items.review')
     
     id = db.Column(db.Integer, primary_key=True)
     comment = db.Column(db.String)
     customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'))
     item_id = db.Column(db.Integer, db.ForeignKey('items.id'))
+    
+    serialize_rules = ('-customer.reviews', '-item.reviews')
 
     customer = db.relationship('Customer', back_populates='reviews')
     item = db.relationship('Item', back_populates='reviews')
